@@ -10,8 +10,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import com.akas62083.qm.screens.home.HomeScreen
+import com.akas62083.qm.screens.home.HomeViewModel
 import com.akas62083.qm.ui.theme.QɐMTheme
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -19,6 +27,7 @@ import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
+import dagger.hilt.android.AndroidEntryPoint
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,20 +43,16 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun Greeting() {
-    val singapore = LatLng(1.35, 103.87)
-    val singaporeMarkerState = rememberMarkerState(position = singapore)
-    val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(singapore, 10f)
-    }
-    GoogleMap(
-        modifier = Modifier.fillMaxSize(),
-        cameraPositionState = cameraPositionState
+    val navController = rememberNavController()
+    val currentBackStack by navController.currentBackStackEntryAsState()
+    NavHost(
+        navController = navController,
+        startDestination = Route.HomeScreen,
+        modifier = Modifier.fillMaxSize()
     ) {
-        Marker(
-            state = singaporeMarkerState,
-            title = "Singapore",
-            snippet = "Marker in Singapore"
-        )
+        composable<Route.HomeScreen>() {
+            HomeScreen()
+        }
     }
 }
 
