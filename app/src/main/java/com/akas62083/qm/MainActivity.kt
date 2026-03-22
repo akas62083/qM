@@ -29,6 +29,7 @@ import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
 import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,6 +52,7 @@ fun Greeting() {
         modifier = Modifier.fillMaxSize()
     ) {
         composable<Route.HomeScreen>() {
+            val viewModel: HomeViewModel = hiltViewModel()
             HomeScreen()
         }
     }
