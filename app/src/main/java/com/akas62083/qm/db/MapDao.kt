@@ -51,7 +51,7 @@ interface MapDao {
     """)
     suspend fun getTagAndPointsByName(name: String): TagWithPoints
     @Transaction
-    @Query("SELECT * FROM map_tag")
+    @Query("SELECT * FROM map_tag order by tag_name asc")
     fun getAllTagWithPoints(): Flow<List<TagWithPoints>>
     @Transaction
     @Query("""
@@ -61,6 +61,6 @@ interface MapDao {
     """)
     suspend fun getPointAndTagsById(id: Int): PointWithTags
     @Transaction
-    @Query("SELECT * FROM map_point")
+    @Query("SELECT * FROM map_point order by point_id desc")
     fun getAllPointWithTags(): Flow<List<PointWithTags>>
 }

@@ -52,44 +52,48 @@ fun AddTagDialog(
     confirm: () -> Unit
 ) {
     AlertDialog(
-        onDismissRequest = { cancel() },
+        onDismissRequest = {},
         title = { Text(text = "タグを追加") },
         text = {
-            Row {
-                TextField(
-                    modifier = Modifier.weight(8f),
-                    value = uiState.textFieldValueInAddTagDialog,
-                    onValueChange = { onValueChange(it) },
-                    label = { Text(text = "タグ名") },
-                    singleLine = true
-                )
-                Box(
-                    modifier = Modifier.weight(2f)
-                        .aspectRatio(1f)
-                        .fillMaxSize()
-                        .padding(4.dp)
-                        .background(
-                            color = when(uiState.selectedColor) {
-                                is SelectedColor.Red -> Color(0xffff5252)
-                                is SelectedColor.Orange -> Color(0xffff9800)
-                                is SelectedColor.Yellow -> Color(0xfffdd835)
-                                is SelectedColor.Green -> Color(0xff4caf50)
-                                is SelectedColor.Blue -> Color(0xff2196f3)
-                                is SelectedColor.Purple -> Color(0xff9c27b0)
-                                is SelectedColor.Pink -> Color(0xffe91e63)
-                                is SelectedColor.Custom -> uiState.selectedColor.color
-                            },
-                            shape = RoundedCornerShape(3.dp)
-                        )
-                        .clickable { openOrCloseColorPickBottomSheet() }
-                ) {
-
+            Column {
+                Row {
+                    TextField(
+                        modifier = Modifier.weight(8f),
+                        value = uiState.textFieldValueInAddTagDialog,
+                        onValueChange = { onValueChange(it) },
+                        label = { Text(text = "タグ名") },
+                        singleLine = true
+                    )
+                    Box(
+                        modifier = Modifier.weight(2f)
+                            .aspectRatio(1f)
+                            .fillMaxSize()
+                            .padding(4.dp)
+                            .background(
+                                color = when (uiState.selectedColor) {
+                                    is SelectedColor.Red -> Color(0xffff5252)
+                                    is SelectedColor.Orange -> Color(0xffff9800)
+                                    is SelectedColor.Yellow -> Color(0xfffdd835)
+                                    is SelectedColor.Green -> Color(0xff4caf50)
+                                    is SelectedColor.Blue -> Color(0xff2196f3)
+                                    is SelectedColor.Purple -> Color(0xff9c27b0)
+                                    is SelectedColor.Pink -> Color(0xffe91e63)
+                                    is SelectedColor.Custom -> uiState.selectedColor.color
+                                },
+                                shape = RoundedCornerShape(3.dp)
+                            )
+                            .clickable { openOrCloseColorPickBottomSheet() }
+                    ) {}
                 }
-
+                Text(
+                    text = if(!uiState.addTagDialogEnabled && uiState.textFieldValueInAddTagDialog != "") "そのタグは既にあります" else "",
+                    color = Color.Red
+                )
             }
         },
         confirmButton = {
             Button(
+                enabled = uiState.addTagDialogEnabled,
                 shape = RoundedCornerShape(5.dp),
                 onClick = {
                     confirm()

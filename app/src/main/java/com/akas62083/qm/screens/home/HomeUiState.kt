@@ -5,6 +5,7 @@ import com.akas62083.qm.db.mappoint.MapPointEntity
 import com.akas62083.qm.db.maptag.MapTagEntity
 import com.akas62083.qm.db.tagandpoint.PointWithTags
 import com.akas62083.qm.db.tagandpoint.TagWithPoints
+import com.google.android.gms.maps.model.LatLng
 
 data class HomeUiState (
     val pointWithTags: List<PointWithTags> = emptyList(),
@@ -13,8 +14,15 @@ data class HomeUiState (
     val isAddTagDialogOpened: Boolean = false,
     val isColorPickBottomSheetOpened: Boolean = false,
     val selectedColor: SelectedColor = SelectedColor.Red,
-    val textFieldValueInAddTagDialog: String = ""
-)
+    val textFieldValueInAddTagDialog: String = "",
+    val selectedLatLng: LatLng? = null,
+    val selectedTags: List<MapTagEntity> = emptyList(),
+    val notSelectedTags: List<MapTagEntity> = emptyList(),
+    val pointName: String = ""
+) {
+    val addTagDialogEnabled: Boolean =  textFieldValueInAddTagDialog != "" && !tagWithPoints.any { it.tag.name == textFieldValueInAddTagDialog }
+
+}
 sealed class SelectedColor {
     data object Red: SelectedColor()
     data object Orange: SelectedColor()

@@ -32,9 +32,9 @@ import com.akas62083.qm.db.maptag.MapTagEntity
 )
 data class TagPointRef(
     @ColumnInfo(name = "ref_tag_id")
-    val tagId: Int,
+    val tagId: Long,
     @ColumnInfo(name = "ref_point_id")
-    val pointId: Int,
+    val pointId: Long,
 )
 
 

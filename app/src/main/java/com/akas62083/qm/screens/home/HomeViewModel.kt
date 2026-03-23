@@ -1,15 +1,21 @@
 package com.akas62083.qm.screens.home
 
+import android.location.Geocoder
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.akas62083.qm.db.mappoint.MapPointEntity
 import com.akas62083.qm.db.maptag.MapTagEntity
+import com.akas62083.qm.db.tagandpoint.TagPointRef
 import com.akas62083.qm.repository.data_repo.MapDataRepository
+import com.google.android.gms.maps.model.LatLng
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
@@ -49,6 +55,11 @@ class HomeViewModel @Inject constructor(
             is HomeEvent.ClickedColor -> { clickedColor(event.color) }
             is HomeEvent.ChangeTextFieldValueInAddTagDialog -> { changeTextFieldValueInAddTagDialog(event.value) }
             is HomeEvent.ClickedConfirmButton -> { clickedConfirmButton() }
+            is HomeEvent.ClickedMap -> { clickedMap(event.latLng) }
+            is HomeEvent.ClickedTag -> { clickedTag(event.tag) }
+            is HomeEvent.ClickedTagToUnSelected -> { clickedTagToUnSelected(event.tag) }
+            is HomeEvent.SavePoint -> { savePoint() }
+            is HomeEvent.ChangeMapPointName -> { changeMapPointName(event.value) }
         }
     }
 
@@ -100,6 +111,62 @@ class HomeViewModel @Inject constructor(
                     description = ""
                 )
             )
+        }
+    }
+    private fun clickedMap(latLng: LatLng?) {
+        val notSelectedTags = mutableListOf<MapTagEntity>()
+        uiState.value.tagWithPoints.forEach { tag ->
+            notSelectedTags.add(tag.tag)
+        }
+        _uiState.update { currentState ->
+            currentState.copy(
+                selectedLatLng = latLng,
+                selectedTags = emptyList(),
+                notSelectedTags = notSelectedTags
+            )
+        }
+    }
+    private fun clickedTag(tag: MapTagEntity) {
+        _uiState.update { currentState ->
+            currentState.copy(
+                selectedTags = currentState.selectedTags.plus(tag),
+                notSelectedTags = currentState.notSelectedTags.minus(tag)
+            )
+        }
+    }
+    private fun clickedTagToUnSelected(tag: MapTagEntity) {
+        _uiState.update { currentState ->
+            currentState.copy(
+                selectedTags = currentState.selectedTags.minus(tag),
+                notSelectedTags = currentState.notSelectedTags.plus(tag)
+            )
+        }
+    }
+    private fun savePoint() {
+        viewModelScope.launch {
+            val newId = mapRepository.insertMapPoint(
+                MapPointEntity(
+                    name = uiState.value.pointName,
+                    description = "",
+                    latLng = uiState.value.selectedLatLng!!,
+                )
+            )
+            uiState.value.selectedTags.forEach { tag ->
+                mapRepository.insertTagPointRef(
+                    TagPointRef(
+                        tagId = tag.id,
+                        pointId = newId
+                    )
+                )
+            }
+        }
+        _uiState.update { currentState ->
+            currentState.copy(selectedLatLng = null)
+        }
+    }
+    private fun changeMapPointName(value: String) {
+        _uiState.update { currentState ->
+            currentState.copy(pointName = value)
         }
     }
 }

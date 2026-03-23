@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
@@ -46,16 +47,20 @@ class MainActivity : ComponentActivity() {
 fun Greeting() {
     val navController = rememberNavController()
     val currentBackStack by navController.currentBackStackEntryAsState()
-    NavHost(
-        navController = navController,
-        startDestination = Route.HomeScreen,
-        modifier = Modifier.fillMaxSize()
-    ) {
-        composable<Route.HomeScreen>() {
-            val viewModel: HomeViewModel = hiltViewModel()
-            HomeScreen(
-                viewModel = viewModel
-            )
+    SharedTransitionLayout {
+        NavHost(
+            navController = navController,
+            startDestination = Route.HomeScreen,
+            modifier = Modifier.fillMaxSize()
+        ) {
+            composable<Route.HomeScreen>() {
+                val viewModel: HomeViewModel = hiltViewModel()
+                HomeScreen(
+                    viewModel = viewModel,
+                    animatedVisibilityScope = this,
+                    sharedTransitionScope = this@SharedTransitionLayout
+                )
+            }
         }
     }
 }
