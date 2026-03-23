@@ -1,11 +1,50 @@
 package com.akas62083.qm.screens.home
 
+import android.R.attr.contentDescription
+import android.R.attr.onClick
+import android.R.attr.text
 import android.annotation.SuppressLint
+import android.util.Log
+import android.util.Log.v
+import androidx.compose.foundation.background
+import androidx.compose.foundation.checkScrollableContainerConstraints
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.Button
+import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonElevation
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -14,6 +53,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.akas62083.qm.screens.home.dialogs.AddTagDialog
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.CameraPosition.fromLatLngZoom
@@ -40,33 +83,157 @@ import com.google.maps.android.compose.streetview.rememberStreetViewCameraPositi
 import com.google.maps.android.ktx.MapsExperimentalFeature
 import kotlinx.coroutines.launch
 
-@OptIn(MapsExperimentalFeature::class)
+@OptIn(MapsExperimentalFeature::class, ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen() {
-    var check by remember { mutableStateOf(false) }
-    val singapore = LatLng(1.35, 103.87)
-    val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(singapore, 10f)
-    }
-    val singaporeGroundOverlayPosition = GroundOverlayPosition.create(
-        singapore, 0f, 30f
-    )
-    val tileOverlayState = rememberTileOverlayState()
-    LaunchedEffect(check) {
-        if(check) {
-        } else {
+fun HomeScreen(
+    viewModel: HomeViewModel
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val scope = rememberCoroutineScope()
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed) // ドロワーの開閉
+    var dropDownMenuExpanded by remember { mutableStateOf(false) } //地点一覧表示かタグ一覧表示かを指定する四角い小さいやつ
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        gesturesEnabled = drawerState.isOpen,
+        drawerContent = {
+            ModalDrawerSheet {
+                Column(
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    Spacer(Modifier.height(12.dp))
+                    Row(modifier = Modifier.height(IntrinsicSize.Min)) {
+                        Text(
+                            text = if(uiState.dropDownMenuLocationDisplay) "地点一覧" else "タグ一覧",
+                            modifier = Modifier.padding(16.dp),
+                        )
+                        Spacer(modifier = Modifier.width(20.dp))
+                        Box(modifier = Modifier.aspectRatio(1f).padding(15.dp).fillMaxSize()) {
+                            Icon(
+                                modifier = Modifier.fillMaxSize().clickable { dropDownMenuExpanded = !dropDownMenuExpanded },
+                                imageVector = Icons.Default.KeyboardArrowDown,
+                                contentDescription = null
+                            )
+                            DropdownMenu(
+                                expanded = dropDownMenuExpanded,
+                                onDismissRequest = { dropDownMenuExpanded = false }
+                            ) {
+                                DropdownMenuItem(
+                                    text = {
+                                        Text("地点一覧")
+                                    },
+                                    onClick = {
+                                        viewModel.onEvent(HomeEvent.DropDownMenuDisplayChange(true))
+                                        dropDownMenuExpanded = false
+                                    },
+                                )
+                                DropdownMenuItem(
+                                    text = {
+                                        Text("タグ一覧")
+                                    },
+                                    onClick = {
+                                        viewModel.onEvent(HomeEvent.DropDownMenuDisplayChange(false))
+                                        dropDownMenuExpanded = false
+                                    },
+                                )
+                            }
+
+                        }
+                    }
+                    HorizontalDivider()
+                    if(uiState.dropDownMenuLocationDisplay) {
+                        if(uiState.pointWithTags.isNotEmpty()) {
+                            uiState.pointWithTags.forEach {
+                                Row(modifier = Modifier.horizontalScroll(rememberScrollState())) {
+                                    Text(it.point.name)
+                                    it.tags.forEach { tag ->
+                                        Spacer(modifier = Modifier.width(10.dp))
+                                        Text(text = tag.name, modifier = Modifier.background(color = tag.color, shape = RoundedCornerShape(7.dp)))
+                                    }
+                                }
+                            }
+                        } else {
+                            Text("地点がありません")
+                        }
+                    } else {
+                        if(uiState.tagWithPoints.isNotEmpty()) {
+                            uiState.tagWithPoints.forEach {
+                                Row(modifier = Modifier.horizontalScroll(rememberScrollState())) {
+                                    Text(it.tag.name)
+                                    it.points.forEach { point ->
+                                        Spacer(modifier = Modifier.width(10.dp))
+                                        Text(text = point.name, modifier = Modifier.background(Color.LightGray, shape = RoundedCornerShape(7.dp)))
+                                    }
+                                }
+                            }
+                        } else {
+                            Text("タグがありません")
+                            Button(onClick = { viewModel.onEvent(HomeEvent.OpenOrCloseAddTagDialog) }) {
+                                Text(text = "タグを追加")
+                            }
+                        }
+                    }
+                }
+            }
         }
-    }
-    Box(modifier = Modifier.fillMaxSize()) {
-        GoogleMap(
-            modifier = Modifier.fillMaxSize(),
-            cameraPositionState = cameraPositionState,
-            mergeDescendants = false
-        ) {
+    ) {
+        Scaffold(
+            contentWindowInsets = WindowInsets(0, 0, 0, 0),
+            topBar = {
+                TopAppBar(
+                    navigationIcon = {
+                        IconButton(
+                            onClick = {
+                                scope.launch {
+                                    if(drawerState.isClosed) drawerState.open()
+                                    else drawerState.close()
+                                }
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Menu,
+                                contentDescription = "menu"
+                            )
+                        }
+                    },
+                    title = {
+                    }
+                )
+            },
+            floatingActionButton = {
+                FloatingActionButton(
+                    modifier = Modifier.height(80.dp).aspectRatio(1f).height(IntrinsicSize.Min),
+                    onClick = {}
+                ) {
+                    Icon(
+                        modifier = Modifier.padding(10.dp).fillMaxSize(),
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "add fab"
+                    )
+                }
+            }
+        ) { innerPadding ->
+            Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+                GoogleMap(
+                    modifier = Modifier.fillMaxSize(),
+                    cameraPositionState = rememberCameraPositionState(),
+                    mergeDescendants = false,
+                    onMapClick = {
+                        Log.d("GoogleMap", "onMapClick: $it")
+                    }
+                ) {
+                }
+            }
         }
-        Button(onClick = {
-            check = !check
-        }) {
+        if(uiState.isAddTagDialogOpened) {
+            AddTagDialog(
+                uiState = uiState,
+                cancel = { viewModel.onEvent(HomeEvent.OpenOrCloseAddTagDialog) },
+                openOrCloseColorPickBottomSheet = { viewModel.onEvent(HomeEvent.OpenOrCloseColorPickBottomSheet) },
+                clickedColor = { viewModel.onEvent(HomeEvent.ClickedColor(it)) },
+                onValueChange = { viewModel.onEvent(HomeEvent.ChangeTextFieldValueInAddTagDialog(it)) },
+                confirm = { viewModel.onEvent(HomeEvent.ClickedConfirmButton) }
+            )
         }
     }
 }

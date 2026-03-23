@@ -53,7 +53,9 @@ fun Greeting() {
     ) {
         composable<Route.HomeScreen>() {
             val viewModel: HomeViewModel = hiltViewModel()
-            HomeScreen()
+            HomeScreen(
+                viewModel = viewModel
+            )
         }
     }
 }

@@ -49,13 +49,18 @@ interface MapDao {
         where tag_name = :name
         limit 1
     """)
-    suspend fun getTagAndPointsByName(name: String): TagWithPoints?
-
+    suspend fun getTagAndPointsByName(name: String): TagWithPoints
+    @Transaction
+    @Query("SELECT * FROM map_tag")
+    fun getAllTagWithPoints(): Flow<List<TagWithPoints>>
     @Transaction
     @Query("""
         select * from map_point
         where point_id = :id
         limit 1
     """)
-    suspend fun getPointAndTagsById(id: Int): PointWithTags?
+    suspend fun getPointAndTagsById(id: Int): PointWithTags
+    @Transaction
+    @Query("SELECT * FROM map_point")
+    fun getAllPointWithTags(): Flow<List<PointWithTags>>
 }

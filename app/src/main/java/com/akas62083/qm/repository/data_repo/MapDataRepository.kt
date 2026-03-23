@@ -1,13 +1,11 @@
 package com.akas62083.qm.repository.data_repo
 
-import com.akas62083.qm.db.MapDao
 import com.akas62083.qm.db.mappoint.MapPointEntity
 import com.akas62083.qm.db.maptag.MapTagEntity
 import com.akas62083.qm.db.tagandpoint.PointWithTags
 import com.akas62083.qm.db.tagandpoint.TagPointRef
 import com.akas62083.qm.db.tagandpoint.TagWithPoints
 import kotlinx.coroutines.flow.Flow
-import javax.inject.Inject
 
 interface MapDataRepository {
     suspend fun insertMapPoint(mapPoint: MapPointEntity): Long
@@ -16,7 +14,7 @@ interface MapDataRepository {
     fun getAllMapPoint(): Flow<List<MapPointEntity>>
     suspend fun getMapPointById(id: Int): MapPointEntity
 
-    suspend fun insetrMapTag(mapTag: MapTagEntity): Long
+    suspend fun insertMapTag(mapTag: MapTagEntity): Long
     suspend fun deleteMapTag(mapTag: MapTagEntity)
     suspend fun updateMapTag(mapTag: MapTagEntity)
     fun getAllMapTag(): Flow<List<MapTagEntity>>
@@ -25,6 +23,8 @@ interface MapDataRepository {
     suspend fun insertTagPointRef(ref: TagPointRef)
     suspend fun deleteTagPointRef(ref: TagPointRef)
 
-    suspend fun getTagAndPointsByName(name: String): TagWithPoints?
-    suspend fun getPointAndTagsById(id: Int): PointWithTags?
+    suspend fun getTagAndPointsByName(name: String): TagWithPoints
+    fun getAllTagAndPoints(): Flow<List<TagWithPoints>>
+    suspend fun getPointAndTagsById(id: Int): PointWithTags
+    fun getAllPointAndTags(): Flow<List<PointWithTags>>
 }

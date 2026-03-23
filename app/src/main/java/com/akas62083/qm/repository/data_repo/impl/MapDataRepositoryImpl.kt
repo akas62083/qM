@@ -19,7 +19,7 @@ class MapDataRepositoryImpl @Inject constructor(
     override fun getAllMapPoint(): Flow<List<MapPointEntity>> = dao.getAllMapPoint()
     override suspend fun getMapPointById(id: Int): MapPointEntity = dao.getMapPointById(id)
 
-    override suspend fun insetrMapTag(mapTag: MapTagEntity): Long = dao.insertMapTag(mapTag)
+    override suspend fun insertMapTag(mapTag: MapTagEntity): Long = dao.insertMapTag(mapTag)
     override suspend fun deleteMapTag(mapTag: MapTagEntity) = dao.deleteMapTag(mapTag)
     override suspend fun updateMapTag(mapTag: MapTagEntity) = dao.updateMapTag(mapTag)
     override fun getAllMapTag(): Flow<List<MapTagEntity>> = dao.getAllMapTag()
@@ -27,6 +27,9 @@ class MapDataRepositoryImpl @Inject constructor(
 
     override suspend fun insertTagPointRef(ref: TagPointRef) = dao.insertTagPointRef(ref)
     override suspend fun deleteTagPointRef(ref: TagPointRef) = dao.deleteTagPointRef(ref)
-    override suspend fun getTagAndPointsByName(name: String): TagWithPoints? = dao.getTagAndPointsByName(name)
-    override suspend fun getPointAndTagsById(id: Int): PointWithTags? = dao.getPointAndTagsById(id)
+
+    override suspend fun getTagAndPointsByName(name: String): TagWithPoints = dao.getTagAndPointsByName(name)
+    override fun getAllTagAndPoints(): Flow<List<TagWithPoints>> = dao.getAllTagWithPoints()
+    override suspend fun getPointAndTagsById(id: Int): PointWithTags = dao.getPointAndTagsById(id)
+    override fun getAllPointAndTags(): Flow<List<PointWithTags>> = dao.getAllPointWithTags()
 }
