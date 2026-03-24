@@ -69,3 +69,19 @@ data class PointWithTags(
     )
     val tags: List<MapTagEntity>
 )
+
+data class TagWithPointsWithTags(
+    @Embedded
+    val tag: MapTagEntity,
+    @Relation(
+        entity = MapPointEntity::class,
+        parentColumn = "tag_id",
+        entityColumn = "point_id",
+        associateBy = Junction(
+            TagPointRef::class,
+            parentColumn = "ref_tag_id",
+            entityColumn = "ref_point_id"
+        )
+    )
+    val pointWithTags: List<PointWithTags>
+)

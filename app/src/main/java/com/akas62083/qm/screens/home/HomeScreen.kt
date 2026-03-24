@@ -40,6 +40,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.Button
@@ -69,12 +70,14 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
@@ -82,12 +85,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.akas62083.qm.screens.home.conponent.BottomSheetScreen
+import com.akas62083.qm.screens.home.conponent.DrawerScreen
 import com.akas62083.qm.screens.home.dialogs.AddTagDialog
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.CameraPosition.fromLatLngZoom
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
+import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.StreetViewPanoramaLocation
 import com.google.android.gms.maps.model.TileProvider
 import com.google.maps.android.compose.AdvancedMarker
@@ -123,117 +129,30 @@ fun HomeScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
-    val context = LocalContext.current
-    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed) // ドロワーの開閉
-    var dropDownMenuExpanded by remember { mutableStateOf(false) } //地点一覧表示かタグ一覧表示かを指定する四角い小さいやつ
+    val cameraPositionState = rememberCameraPositionState()
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+
+    val markerState = rememberMarkerState() // when user click the map
+    val markerStates = remember { mutableListOf<MarkerState>() }
+
     ModalNavigationDrawer(
         drawerState = drawerState,
         gesturesEnabled = drawerState.isOpen,
         drawerContent = {
             ModalDrawerSheet {
-                Column(
-                    modifier = Modifier.padding(horizontal = 16.dp)
-                        .verticalScroll(rememberScrollState())
-                ) {
-                    Spacer(Modifier.height(12.dp))
-                    Box {
-                        Row(
-                            modifier = Modifier.height(IntrinsicSize.Min)
-                                .clickable(
-                                    interactionSource = null,
-                                    indication = null
-                                ) { dropDownMenuExpanded = !dropDownMenuExpanded },
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = if(uiState.dropDownMenuLocationDisplay) "地点一覧" else "タグ一覧",
-                                modifier = Modifier.padding(16.dp),
-                            )
-                            Spacer(modifier = Modifier.width(20.dp))
-                            Box(modifier = Modifier.aspectRatio(1f).padding(15.dp).fillMaxSize()) {
-                                Icon(
-                                    modifier = Modifier.fillMaxSize(),
-                                    imageVector = Icons.Default.KeyboardArrowDown,
-                                    contentDescription = null
-                                )
-                            }
-                        }
-                        DropdownMenu(
-                            expanded = dropDownMenuExpanded,
-                            onDismissRequest = { dropDownMenuExpanded = false }
-                        ) {
-                            DropdownMenuItem(
-                                text = {
-                                    Text("地点一覧")
-                                },
-                                onClick = {
-                                    viewModel.onEvent(HomeEvent.DropDownMenuDisplayChange(true))
-                                    dropDownMenuExpanded = false
-                                },
-                            )
-                            DropdownMenuItem(
-                                text = {
-                                    Text("タグ一覧")
-                                },
-                                onClick = {
-                                    viewModel.onEvent(HomeEvent.DropDownMenuDisplayChange(false))
-                                    dropDownMenuExpanded = false
-                                },
-                            )
-                        }
+                DrawerScreen(
+                    uiState = uiState,
+                    dropDownMenuDisplayChange = { viewModel.onEvent(HomeEvent.DropDownMenuDisplayChange(it)) },
+                    openOrCloseAddTagDialog = { viewModel.onEvent(HomeEvent.OpenOrCloseAddTagDialog) },
+                    clickedDownMenuPoint = {
+                        viewModel.onEvent(HomeEvent.ClickedDrawerMenuPoint(it))
+                        scope.launch { drawerState.close() }
+                    },
+                    clickedDownMenuTag = {
+                        viewModel.onEvent(HomeEvent.ClickedDrawerMenuTag(it))
+                        scope.launch { drawerState.close() }
                     }
-                    HorizontalDivider(modifier = Modifier.padding(10.dp))
-                    if(uiState.dropDownMenuLocationDisplay) {
-                        if(uiState.pointWithTags.isNotEmpty()) {
-                            uiState.pointWithTags.forEach {
-                                Row(modifier = Modifier.horizontalScroll(rememberScrollState())) {
-                                    Text(it.point.name)
-                                    it.tags.forEach { tag ->
-                                        Spacer(modifier = Modifier.width(10.dp))
-                                        Text(
-                                            text = tag.name,
-                                            modifier = Modifier.padding(10.dp)
-                                                .background(
-                                                    color = tag.color,
-                                                )
-                                        )
-                                    }
-                                }
-                            }
-                        } else {
-                            Text("地点がありません >_<")
-                        }
-                    } else {
-                        if(uiState.tagWithPoints.isNotEmpty()) {
-                            uiState.tagWithPoints.forEach {
-                                Spacer(modifier = Modifier.height(10.dp))
-                                Row(modifier = Modifier.height(IntrinsicSize.Min)) {
-                                    Text(
-                                        text = it.tag.name,
-                                        modifier = Modifier.background(it.tag.color, CutCornerShape(5.dp))
-                                            .padding(10.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(10.dp))
-                                    Column(modifier = Modifier.fillMaxHeight()) {
-                                        Spacer(modifier = Modifier.weight(1f))
-                                        Text(it.points.size.toString() + "個のポイント")
-                                    }
-                                }
-                            }
-                        } else {
-                            Text("タグがありません >_<")
-                        }
-                        Spacer(modifier = Modifier.height(10.dp))
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                            Button(
-                                onClick = { viewModel.onEvent(HomeEvent.OpenOrCloseAddTagDialog) },
-                                shape = CutCornerShape(5.dp)
-                            ) {
-                                Text(text = "タグを追加")
-                            }
-                        }
-                    }
-                }
+                )
             }
         }
     ) {
@@ -241,6 +160,7 @@ fun HomeScreen(
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
             topBar = {
                 TopAppBar(
+                    title = {},
                     navigationIcon = {
                         IconButton(
                             onClick = {
@@ -256,35 +176,61 @@ fun HomeScreen(
                             )
                         }
                     },
-                    title = {
-                    }
                 )
             },
-            floatingActionButton = {
-                FloatingActionButton(
-                    modifier = Modifier.height(80.dp).aspectRatio(1f).height(IntrinsicSize.Min),
-                    onClick = {}
-                ) {
-                    Icon(
-                        modifier = Modifier.padding(10.dp).fillMaxSize(),
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "add fab"
-                    )
-                }
-            }
         ) { innerPadding ->
             Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
                 GoogleMap(
                     modifier = Modifier.fillMaxSize(),
-                    cameraPositionState = rememberCameraPositionState(),
+                    cameraPositionState = cameraPositionState,
                     mergeDescendants = false,
                     onMapClick = {
+                        scope.launch {
+                            markerState.position = it
+                            cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(it, 18f))
+                        }
                         viewModel.onEvent(HomeEvent.ClickedMap(it))
                     }
                 ) {
+                    if(uiState.selectedLatLng != null) {
+                        Marker(
+                            markerState
+                        )
+                    }
+                    key(uiState.markerType) {
+                        when (val markerType = uiState.markerType) {
+
+                            is MapMarker.MarkerTagWithPointsWithTags -> {
+                                markerType.tagWithPointsWithTags.pointWithTags.forEach { pointWithTags ->
+                                    key(pointWithTags.point.id) {
+                                        Marker(
+                                            state = rememberMarkerState(
+                                                position = pointWithTags.point.latLng
+                                            )
+                                        )
+                                    }
+                                }
+                            }
+
+                            is MapMarker.MarkerPointWithTags -> {
+                                key(markerType.pointWithTags.point.id) {
+                                    Marker(
+                                        state = rememberMarkerState(
+                                            position = markerType.pointWithTags.point.latLng
+                                        )
+                                    )
+                                }
+                            }
+
+                            else -> {}
+                        }
+                    }
                 }
             }
         }
+
+
+
         if(uiState.isAddTagDialogOpened) {
             AddTagDialog(
                 uiState = uiState,
@@ -296,129 +242,16 @@ fun HomeScreen(
             )
         }
         if(uiState.selectedLatLng != null) {
-            ModalBottomSheet(
-                onDismissRequest = { viewModel.onEvent(HomeEvent.ClickedMap(null)) },
-                sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false),
-                modifier = Modifier.fillMaxHeight().fillMaxWidth()
-            ) {
-                SharedTransitionLayout {
-                    Column {
-                        Column(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text(
-                                text = uiState.selectedLatLng!!.latitude.toString() + ", " + uiState.selectedLatLng!!.longitude.toString(),
-                                fontSize = 20.sp,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(10.dp))
-                        OutlinedTextField(
-                            value = uiState.pointName,
-                            onValueChange = { viewModel.onEvent(HomeEvent.ChangeMapPointName(it)) },
-                            label = { Text("名前") },
-                            modifier = Modifier.fillMaxWidth().padding(horizontal = 30.dp)
-                        )
-                        Spacer(modifier = Modifier.height(10.dp))
-                        AnimatedContent(
-                            targetState = uiState.selectedTags,
-                            label = "tag-list"
-                        ) { tags ->
-                            FlowRow(
-                                modifier = Modifier.fillMaxWidth()
-                                    .padding(horizontal = 30.dp)
-                                    .border(
-                                        width = 1.dp,
-                                        color = Color.Black,
-                                        shape = RoundedCornerShape(5.dp)
-                                    )
-                            ) {
-                                tags.forEach {
-                                    Card(
-                                        elevation = CardDefaults.cardElevation(defaultElevation = 5.dp),
-                                        modifier = Modifier.padding(10.dp)
-                                            .sharedElement(
-                                                rememberSharedContentState(key = "tag-${it.name}"),
-                                                animatedVisibilityScope = this@AnimatedContent,
-                                                boundsTransform = { _, _ ->
-                                                    spring(
-                                                        dampingRatio = 0.8f,
-                                                        stiffness = 380f
-                                                    )
-                                                }
-                                            )
-                                            .clickable { viewModel.onEvent(HomeEvent.ClickedTagToUnSelected(it)) }
-                                    ) {
-                                        Text(
-                                            text = it.name,
-                                            modifier = Modifier.background(
-                                                it.color,
-                                                CutCornerShape(5.dp)
-                                            )
-                                                .padding(10.dp)
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(30.dp))
-                        AnimatedContent(
-                            targetState = uiState.notSelectedTags,
-                            label = "tag-lists"
-                        ) { tags ->
-                            FlowRow(
-                                modifier = Modifier.fillMaxWidth()
-                                    .padding(horizontal = 30.dp)
-                                    .border(
-                                        width = 1.dp,
-                                        color = Color.LightGray,
-                                        shape = RoundedCornerShape(5.dp)
-                                    )
-                            ) {
-                                tags.forEach {
-                                    Card(
-                                        elevation = CardDefaults.cardElevation(defaultElevation = 5.dp),
-                                        modifier = Modifier.padding(10.dp)
-                                            .sharedElement(
-                                                rememberSharedContentState(key = "tag-${it.name}"),
-                                                animatedVisibilityScope = this@AnimatedContent,
-                                                boundsTransform = { _, _ ->
-                                                    spring(
-                                                        dampingRatio = 0.8f,
-                                                        stiffness = 380f
-                                                    )
-                                                }
-                                            )
-                                            .clickable { viewModel.onEvent(HomeEvent.ClickedTag( it )) }
-                                    ) {
-                                        Text(
-                                            text = it.name,
-                                            modifier = Modifier.background(
-                                                it.color,
-                                                CutCornerShape(5.dp)
-                                            )
-                                                .padding(10.dp)
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(20.dp))
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                            Button(
-                                onClick = {
-                                    viewModel.onEvent(HomeEvent.SavePoint)
-                                }
-                            ) {
-                                Text("保存")
-                            }
-                        }
-                    }
-                }
-            }
+            BottomSheetScreen(
+                uiState = uiState,
+                clickedMap = { viewModel.onEvent(HomeEvent.ClickedMap(it)) },
+                changeMapPointName = { viewModel.onEvent(HomeEvent.ChangeMapPointName(it)) },
+                clickedTagToUnSelected = { viewModel.onEvent(HomeEvent.ClickedTagToUnSelected(it)) },
+                clickedTag = { viewModel.onEvent(HomeEvent.ClickedTag(it)) },
+                savePoint = { viewModel.onEvent(HomeEvent.SavePoint) }
+            )
         }
+
     }
 }
 

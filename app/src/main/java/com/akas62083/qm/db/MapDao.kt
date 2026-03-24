@@ -12,6 +12,7 @@ import com.akas62083.qm.db.maptag.MapTagEntity
 import com.akas62083.qm.db.tagandpoint.PointWithTags
 import com.akas62083.qm.db.tagandpoint.TagPointRef
 import com.akas62083.qm.db.tagandpoint.TagWithPoints
+import com.akas62083.qm.db.tagandpoint.TagWithPointsWithTags
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -46,10 +47,10 @@ interface MapDao {
     @Transaction
     @Query("""
         select * from map_tag
-        where tag_name = :name
+        where tag_id = :id
         limit 1
     """)
-    suspend fun getTagAndPointsByName(name: String): TagWithPoints
+    fun getTagAndPointsByName(id: Long): Flow<TagWithPoints>
     @Transaction
     @Query("SELECT * FROM map_tag order by tag_name asc")
     fun getAllTagWithPoints(): Flow<List<TagWithPoints>>
@@ -59,8 +60,11 @@ interface MapDao {
         where point_id = :id
         limit 1
     """)
-    suspend fun getPointAndTagsById(id: Int): PointWithTags
+    fun getPointAndTagsById(id: Int): Flow<PointWithTags>
     @Transaction
     @Query("SELECT * FROM map_point order by point_id desc")
     fun getAllPointWithTags(): Flow<List<PointWithTags>>
+    @Transaction
+    @Query("select * from map_tag where tag_id = :id limit 1")
+    fun getTagWithPointsWithTagsById(id: Long): Flow<TagWithPointsWithTags>
 }

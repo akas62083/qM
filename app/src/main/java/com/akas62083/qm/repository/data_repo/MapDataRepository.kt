@@ -5,6 +5,7 @@ import com.akas62083.qm.db.maptag.MapTagEntity
 import com.akas62083.qm.db.tagandpoint.PointWithTags
 import com.akas62083.qm.db.tagandpoint.TagPointRef
 import com.akas62083.qm.db.tagandpoint.TagWithPoints
+import com.akas62083.qm.db.tagandpoint.TagWithPointsWithTags
 import kotlinx.coroutines.flow.Flow
 
 interface MapDataRepository {
@@ -23,8 +24,9 @@ interface MapDataRepository {
     suspend fun insertTagPointRef(ref: TagPointRef)
     suspend fun deleteTagPointRef(ref: TagPointRef)
 
-    suspend fun getTagAndPointsByName(name: String): TagWithPoints
+    fun getTagAndPointsByName(id: Long): Flow<TagWithPoints>
     fun getAllTagAndPoints(): Flow<List<TagWithPoints>>
-    suspend fun getPointAndTagsById(id: Int): PointWithTags
+    fun getPointAndTagsById(id: Int): Flow<PointWithTags>
     fun getAllPointAndTags(): Flow<List<PointWithTags>>
+    fun getTagWithPointsWithTagsById(id: Long): Flow<TagWithPointsWithTags>
 }

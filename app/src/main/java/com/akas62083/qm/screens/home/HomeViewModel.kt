@@ -7,10 +7,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.akas62083.qm.db.mappoint.MapPointEntity
 import com.akas62083.qm.db.maptag.MapTagEntity
+import com.akas62083.qm.db.tagandpoint.PointWithTags
 import com.akas62083.qm.db.tagandpoint.TagPointRef
+import com.akas62083.qm.db.tagandpoint.TagWithPointsWithTags
 import com.akas62083.qm.repository.data_repo.MapDataRepository
 import com.google.android.gms.maps.model.LatLng
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -60,6 +63,8 @@ class HomeViewModel @Inject constructor(
             is HomeEvent.ClickedTagToUnSelected -> { clickedTagToUnSelected(event.tag) }
             is HomeEvent.SavePoint -> { savePoint() }
             is HomeEvent.ChangeMapPointName -> { changeMapPointName(event.value) }
+            is HomeEvent.ClickedDrawerMenuPoint -> { clickedDrawerMenuPoint(event.point) }
+            is HomeEvent.ClickedDrawerMenuTag -> { clickedDrawerMenuTag(event.tag.tag) }
         }
     }
 
@@ -167,6 +172,20 @@ class HomeViewModel @Inject constructor(
     private fun changeMapPointName(value: String) {
         _uiState.update { currentState ->
             currentState.copy(pointName = value)
+        }
+    }
+    private fun clickedDrawerMenuTag(tag: MapTagEntity) {
+        viewModelScope.launch {
+            mapRepository.getTagWithPointsWithTagsById(tag.id).collect {
+                _uiState.update { currentState ->
+                    currentState.copy(markerType = MapMarker.MarkerTagWithPointsWithTags(it))
+                }
+            }
+        }
+    }
+    private fun clickedDrawerMenuPoint(point: PointWithTags) {
+        _uiState.update { currentState ->
+            currentState.copy(markerType = MapMarker.MarkerPointWithTags(point))
         }
     }
 }

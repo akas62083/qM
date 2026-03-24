@@ -6,6 +6,7 @@ import com.akas62083.qm.db.maptag.MapTagEntity
 import com.akas62083.qm.db.tagandpoint.PointWithTags
 import com.akas62083.qm.db.tagandpoint.TagPointRef
 import com.akas62083.qm.db.tagandpoint.TagWithPoints
+import com.akas62083.qm.db.tagandpoint.TagWithPointsWithTags
 import com.akas62083.qm.repository.data_repo.MapDataRepository
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
@@ -28,8 +29,9 @@ class MapDataRepositoryImpl @Inject constructor(
     override suspend fun insertTagPointRef(ref: TagPointRef) = dao.insertTagPointRef(ref)
     override suspend fun deleteTagPointRef(ref: TagPointRef) = dao.deleteTagPointRef(ref)
 
-    override suspend fun getTagAndPointsByName(name: String): TagWithPoints = dao.getTagAndPointsByName(name)
+    override fun getTagAndPointsByName(id: Long): Flow<TagWithPoints> = dao.getTagAndPointsByName(id)
     override fun getAllTagAndPoints(): Flow<List<TagWithPoints>> = dao.getAllTagWithPoints()
-    override suspend fun getPointAndTagsById(id: Int): PointWithTags = dao.getPointAndTagsById(id)
+    override fun getPointAndTagsById(id: Int): Flow<PointWithTags> = dao.getPointAndTagsById(id)
     override fun getAllPointAndTags(): Flow<List<PointWithTags>> = dao.getAllPointWithTags()
+    override fun getTagWithPointsWithTagsById(id: Long): Flow<TagWithPointsWithTags> = dao.getTagWithPointsWithTagsById(id)
 }

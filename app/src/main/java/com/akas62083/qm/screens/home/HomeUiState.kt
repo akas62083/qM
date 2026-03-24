@@ -5,6 +5,7 @@ import com.akas62083.qm.db.mappoint.MapPointEntity
 import com.akas62083.qm.db.maptag.MapTagEntity
 import com.akas62083.qm.db.tagandpoint.PointWithTags
 import com.akas62083.qm.db.tagandpoint.TagWithPoints
+import com.akas62083.qm.db.tagandpoint.TagWithPointsWithTags
 import com.google.android.gms.maps.model.LatLng
 
 data class HomeUiState (
@@ -18,7 +19,8 @@ data class HomeUiState (
     val selectedLatLng: LatLng? = null,
     val selectedTags: List<MapTagEntity> = emptyList(),
     val notSelectedTags: List<MapTagEntity> = emptyList(),
-    val pointName: String = ""
+    val pointName: String = "",
+    val markerType: MapMarker = MapMarker.None
 ) {
     val addTagDialogEnabled: Boolean =  textFieldValueInAddTagDialog != "" && !tagWithPoints.any { it.tag.name == textFieldValueInAddTagDialog }
 
@@ -32,4 +34,10 @@ sealed class SelectedColor {
     data object Purple: SelectedColor()
     data object Pink: SelectedColor()
     data class Custom(val color: Color): SelectedColor()
+}
+
+sealed class MapMarker {
+    data object None: MapMarker()
+    data class MarkerTagWithPointsWithTags(val tagWithPointsWithTags: TagWithPointsWithTags): MapMarker()
+    data class MarkerPointWithTags(val pointWithTags: PointWithTags): MapMarker()
 }
