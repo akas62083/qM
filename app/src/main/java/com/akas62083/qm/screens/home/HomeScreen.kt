@@ -144,6 +144,11 @@ fun HomeScreen(
                     uiState = uiState,
                     dropDownMenuDisplayChange = { viewModel.onEvent(HomeEvent.DropDownMenuDisplayChange(it)) },
                     openOrCloseAddTagDialog = { viewModel.onEvent(HomeEvent.OpenOrCloseAddTagDialog) },
+                    openOrCloseEditPointNameDialog = { viewModel.onEvent(HomeEvent.OpenOrCloseEditPointNameDialog(it)) },
+                    editPointName = { viewModel.onEvent(HomeEvent.EditPointName) },
+                    changePointName = { viewModel.onEvent(HomeEvent.ChangeMapPointName(it)) },
+                    deleteDialog = { viewModel.onEvent(HomeEvent.DeletePointDialog(it)) },
+                    deletePoint = { viewModel.onEvent(HomeEvent.DeletePoint) },
                     clickedDownMenuPoint = {
                         viewModel.onEvent(HomeEvent.ClickedDrawerMenuPoint(it))
                         scope.launch { drawerState.close() }
@@ -151,7 +156,7 @@ fun HomeScreen(
                     clickedDownMenuTag = {
                         viewModel.onEvent(HomeEvent.ClickedDrawerMenuTag(it))
                         scope.launch { drawerState.close() }
-                    }
+                    },
                 )
             }
         }
@@ -197,9 +202,8 @@ fun HomeScreen(
                             markerState
                         )
                     }
-                    key(uiState.markerType) {
+                    key(uiState.markerType) { //   important!!!
                         when (val markerType = uiState.markerType) {
-
                             is MapMarker.MarkerTagWithPointsWithTags -> {
                                 markerType.tagWithPointsWithTags.pointWithTags.forEach { pointWithTags ->
                                     key(pointWithTags.point.id) {
@@ -211,7 +215,6 @@ fun HomeScreen(
                                     }
                                 }
                             }
-
                             is MapMarker.MarkerPointWithTags -> {
                                 key(markerType.pointWithTags.point.id) {
                                     Marker(
@@ -221,7 +224,6 @@ fun HomeScreen(
                                     )
                                 }
                             }
-
                             else -> {}
                         }
                     }

@@ -9,21 +9,23 @@ import com.akas62083.qm.db.tagandpoint.TagWithPointsWithTags
 import com.google.android.gms.maps.model.LatLng
 
 data class HomeUiState (
-    val pointWithTags: List<PointWithTags> = emptyList(),
-    val tagWithPoints: List<TagWithPoints> = emptyList(),
-    val dropDownMenuLocationDisplay: Boolean = true, //trueだと、ドロワーで地点表示、falseだとタグ表示
-    val isAddTagDialogOpened: Boolean = false,
-    val isColorPickBottomSheetOpened: Boolean = false,
-    val selectedColor: SelectedColor = SelectedColor.Red,
-    val textFieldValueInAddTagDialog: String = "",
-    val selectedLatLng: LatLng? = null,
-    val selectedTags: List<MapTagEntity> = emptyList(),
-    val notSelectedTags: List<MapTagEntity> = emptyList(),
-    val pointName: String = "",
-    val markerType: MapMarker = MapMarker.None
+    val pointWithTags: List<PointWithTags> = emptyList(), // a list of a point and its tags. get first.
+    val tagWithPoints: List<TagWithPoints> = emptyList(), // a list of a tag and its points. get first.
+    val dropDownMenuLocationDisplay: Boolean = true, // what a drawer displays. true is point, false is tag.
+    val isAddTagDialogOpened: Boolean = false, // dialog of add tag is opened or closed. false is closed.
+    val isColorPickBottomSheetOpened: Boolean = false, // bottom sheet of pick color is opened or closed, false is closed.
+    val selectedColor: SelectedColor = SelectedColor.Red, // selected color in add tag dialog.
+    val textFieldValueInAddTagDialog: String = "", // text field value in add tag dialog.
+    val selectedLatLng: LatLng? = null, // latlng that user clicked in map.
+    val selectedTags: List<MapTagEntity> = emptyList(), // selected tags in bottom sheet of making a point.
+    val notSelectedTags: List<MapTagEntity> = emptyList(), // not selected tags in bottom sheet of making a point. it same tagWithPoints at first (when user clicked map).
+    val pointName: String = "", // a name of a point in bottom sheet. it can be also used for edit point name.
+    val markerType: MapMarker = MapMarker.None, // marker type in map. when user click the drawer. it is a response for it.
+    val editPointName: MapPointEntity? = null,
+    val deletePoint: MapPointEntity? = null
 ) {
-    val addTagDialogEnabled: Boolean =  textFieldValueInAddTagDialog != "" && !tagWithPoints.any { it.tag.name == textFieldValueInAddTagDialog }
-
+    val addTagDialogEnabled: Boolean =  textFieldValueInAddTagDialog != "" && !tagWithPoints.any { it.tag.name == textFieldValueInAddTagDialog } // can or cannot save a tag in dialog of add tag.
+    val pointNameEnabled: Boolean = pointName != "" && pointName.length < 21
 }
 sealed class SelectedColor {
     data object Red: SelectedColor()

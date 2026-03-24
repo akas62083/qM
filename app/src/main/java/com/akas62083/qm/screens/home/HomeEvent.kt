@@ -1,5 +1,6 @@
 package com.akas62083.qm.screens.home
 
+import com.akas62083.qm.db.mappoint.MapPointEntity
 import com.akas62083.qm.db.maptag.MapTagEntity
 import com.akas62083.qm.db.tagandpoint.PointWithTags
 import com.akas62083.qm.db.tagandpoint.TagWithPoints
@@ -11,6 +12,10 @@ sealed interface HomeEvent {
     data object OpenOrCloseAddTagDialog: HomeEvent
     data class ClickedDrawerMenuPoint(val point: PointWithTags): HomeEvent
     data class ClickedDrawerMenuTag(val tag: TagWithPoints): HomeEvent
+    data class OpenOrCloseEditPointNameDialog(val point: MapPointEntity?): HomeEvent
+    data object EditPointName: HomeEvent
+    data class DeletePointDialog(val point: MapPointEntity?): HomeEvent
+    data object DeletePoint: HomeEvent
 
     // Map
     data class ClickedMap(val latLng: LatLng?): HomeEvent

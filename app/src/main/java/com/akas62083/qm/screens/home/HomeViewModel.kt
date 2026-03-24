@@ -65,6 +65,10 @@ class HomeViewModel @Inject constructor(
             is HomeEvent.ChangeMapPointName -> { changeMapPointName(event.value) }
             is HomeEvent.ClickedDrawerMenuPoint -> { clickedDrawerMenuPoint(event.point) }
             is HomeEvent.ClickedDrawerMenuTag -> { clickedDrawerMenuTag(event.tag.tag) }
+            is HomeEvent.OpenOrCloseEditPointNameDialog -> { openOrCloseEditPointNameDialog(event.point) }
+            is HomeEvent.EditPointName -> { editPointName() }
+            is HomeEvent.DeletePointDialog -> { deletePointDialog(event.point) }
+            is HomeEvent.DeletePoint -> { deletePoint() }
         }
     }
 
@@ -125,6 +129,7 @@ class HomeViewModel @Inject constructor(
         }
         _uiState.update { currentState ->
             currentState.copy(
+                pointName = "",
                 selectedLatLng = latLng,
                 selectedTags = emptyList(),
                 notSelectedTags = notSelectedTags
@@ -186,6 +191,28 @@ class HomeViewModel @Inject constructor(
     private fun clickedDrawerMenuPoint(point: PointWithTags) {
         _uiState.update { currentState ->
             currentState.copy(markerType = MapMarker.MarkerPointWithTags(point))
+        }
+    }
+    private fun openOrCloseEditPointNameDialog(point: MapPointEntity?) {
+        _uiState.update { currentState ->
+            currentState.copy(editPointName = point, pointName = point?.name ?: "")
+        }
+    }
+    private fun editPointName() {
+        viewModelScope.launch {
+            mapRepository.updateMapPoint(
+                uiState.value.editPointName!!.copy(name = uiState.value.pointName)
+            )
+        }
+    }
+    private fun deletePointDialog(point: MapPointEntity?) {
+        _uiState.update { currentState ->
+            currentState.copy(deletePoint = point)
+        }
+    }
+    private fun deletePoint() {
+        viewModelScope.launch {
+            mapRepository.deleteMapPoint(uiState.value.deletePoint!!)
         }
     }
 }

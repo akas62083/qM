@@ -5,5 +5,4 @@ import kotlinx.serialization.Serializable
 object Route {
     @Serializable
     data object HomeScreen
-
 }
