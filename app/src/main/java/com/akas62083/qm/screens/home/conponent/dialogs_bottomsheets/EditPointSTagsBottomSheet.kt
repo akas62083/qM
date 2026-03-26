@@ -1,14 +1,9 @@
-package com.akas62083.qm.screens.home.dialogs_bottomsheets
+package com.akas62083.qm.screens.home.conponent.dialogs_bottomsheets
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CutCornerShape
@@ -23,17 +18,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.akas62083.qm.db.maptag.MapTagEntity
+import com.akas62083.qm.screens.home.AddOrEditEntity
 import com.akas62083.qm.screens.home.HomeUiState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EditPointsTagsBottomSheet(
+fun EditPointSTagsBottomSheet(
     uiState: HomeUiState,
     cancel: () -> Unit,
     removeTag: (MapTagEntity) -> Unit,
     addTag: (MapTagEntity) -> Unit
 ) {
-    val editPoint = uiState.editPointsTags ?: return
+    val state = uiState.addOrEditEntity as AddOrEditEntity.EditPointSTags
+    val editPoint = state.point
 
     val selectedTags = remember(uiState.pointWithTags, editPoint) {
         uiState.pointWithTags.find { it.point.id == editPoint.id }?.tags ?: emptyList()

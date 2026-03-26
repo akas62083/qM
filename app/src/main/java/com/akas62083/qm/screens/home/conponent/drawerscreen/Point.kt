@@ -30,7 +30,7 @@ import com.akas62083.qm.screens.home.HomeUiState
 @Composable
 fun Point(
     uiState: HomeUiState,
-    clickedDownMenuPoint: (PointWithTags) -> Unit
+    onPointClicked: (PointWithTags) -> Unit
 ) {
     Column {
         if (uiState.pointWithTags.isNotEmpty()) {
@@ -45,7 +45,7 @@ fun Point(
                             shape = RoundedCornerShape(5.dp)
                         )
                         .padding(7.dp)
-                        .clickable { clickedDownMenuPoint(it) }
+                        .clickable { onPointClicked(it) }
                 ) {
                     Icon(
                         imageVector = Icons.Default.Flag,

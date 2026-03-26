@@ -1,4 +1,4 @@
-package com.akas62083.qm.screens.home.dialogs_bottomsheets
+package com.akas62083.qm.screens.home.conponent.dialogs_bottomsheets
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -33,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.akas62083.qm.screens.home.AddOrEditEntity
 import com.akas62083.qm.screens.home.HomeUiState
 import com.akas62083.qm.screens.home.SelectedColor
 
@@ -40,12 +41,13 @@ import com.akas62083.qm.screens.home.SelectedColor
 @Composable
 fun AddTagDialog(
     uiState: HomeUiState,
-    cancel: () -> Unit,
-    openOrCloseColorPickBottomSheet: () -> Unit,
-    clickedColor: (SelectedColor) -> Unit,
     onValueChange: (String) -> Unit,
+    onColorPickerBottomSheetToggle: () -> Unit,
+    cancel: () -> Unit,
+    onColorClicked: (SelectedColor) -> Unit,
     confirm: () -> Unit
 ) {
+    val state = uiState.addOrEditEntity as AddOrEditEntity.AddTag
     AlertDialog(
         onDismissRequest = {},
         title = { Text(text = "タグを追加") },
@@ -54,7 +56,7 @@ fun AddTagDialog(
                 Row {
                     TextField(
                         modifier = Modifier.weight(8f),
-                        value = uiState.textFieldValueInAddTagDialog,
+                        value = state.text,
                         onValueChange = { onValueChange(it) },
                         label = { Text(text = "タグ名") },
                         singleLine = true
@@ -65,7 +67,7 @@ fun AddTagDialog(
                             .fillMaxSize()
                             .padding(4.dp)
                             .background(
-                                color = when (uiState.selectedColor) {
+                                color = when (state.selectedColor) {
                                     is SelectedColor.Red -> Color(0xffff5252)
                                     is SelectedColor.Orange -> Color(0xffff9800)
                                     is SelectedColor.Yellow -> Color(0xfffdd835)
@@ -73,26 +75,20 @@ fun AddTagDialog(
                                     is SelectedColor.Blue -> Color(0xff2196f3)
                                     is SelectedColor.Purple -> Color(0xff9c27b0)
                                     is SelectedColor.Pink -> Color(0xffe91e63)
-                                    is SelectedColor.Custom -> uiState.selectedColor.color
+                                    is SelectedColor.Custom -> state.selectedColor.color
                                 },
                                 shape = RoundedCornerShape(3.dp)
                             )
-                            .clickable { openOrCloseColorPickBottomSheet() }
+                            .clickable { onColorPickerBottomSheetToggle() }
                     ) {}
                 }
-                Text(
-                    text = if(!uiState.addTagDialogEnabled && uiState.textFieldValueInAddTagDialog != "") "そのタグは既にあります" else "",
-                    color = Color.Red
-                )
             }
         },
         confirmButton = {
             Button(
-                enabled = uiState.addTagDialogEnabled,
                 shape = RoundedCornerShape(5.dp),
                 onClick = {
                     confirm()
-                    cancel()
                 }
             ) {
                 Text("追加")
@@ -110,13 +106,15 @@ fun AddTagDialog(
         },
         shape = RoundedCornerShape(5.dp)
     )
-    if(uiState.isColorPickBottomSheetOpened) {
+
+
+    if(state.colorPicker) {
         var redSliderValue by remember { mutableFloatStateOf(0f) }
         var greenSliderValue by remember { mutableFloatStateOf(0f) }
         var blueSliderValue by remember { mutableFloatStateOf(0f) }
 
         ModalBottomSheet(
-            onDismissRequest = { openOrCloseColorPickBottomSheet() },
+            onDismissRequest = { onColorPickerBottomSheetToggle() },
             sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false),
             modifier = Modifier.fillMaxHeight().fillMaxWidth()
         ) {
@@ -128,8 +126,8 @@ fun AddTagDialog(
                         .fillMaxSize()
                         .padding(5.dp)
                         .background(Color(0xffff5252), shape = RoundedCornerShape(5.dp))
-                        .border(width = if(uiState.selectedColor is SelectedColor.Red) 2.dp else 0.dp, color = Color.Black, shape = RoundedCornerShape(5.dp))
-                        .clickable { clickedColor(SelectedColor.Red); openOrCloseColorPickBottomSheet() }
+                        .border(width = if(state.selectedColor is SelectedColor.Red) 2.dp else 0.dp, color = Color.Black, shape = RoundedCornerShape(5.dp))
+                        .clickable { onColorClicked(SelectedColor.Red)}
                     ) {}
                     Box(modifier = Modifier
                         .weight(1f)
@@ -137,8 +135,8 @@ fun AddTagDialog(
                         .fillMaxSize()
                         .padding(5.dp)
                         .background(Color(0xffff9800), shape = RoundedCornerShape(5.dp))
-                        .border(width = if(uiState.selectedColor is SelectedColor.Orange) 2.dp else 0.dp, color = Color.Black, shape = RoundedCornerShape(5.dp))
-                        .clickable { clickedColor(SelectedColor.Orange); openOrCloseColorPickBottomSheet() }
+                        .border(width = if(state.selectedColor is SelectedColor.Orange) 2.dp else 0.dp, color = Color.Black, shape = RoundedCornerShape(5.dp))
+                        .clickable { onColorClicked(SelectedColor.Orange)}
                     ) {}
                     Box(modifier = Modifier
                         .weight(1f)
@@ -146,8 +144,8 @@ fun AddTagDialog(
                         .fillMaxSize()
                         .padding(5.dp)
                         .background(Color(0xfffdd835), shape = RoundedCornerShape(5.dp))
-                        .border(width = if(uiState.selectedColor is SelectedColor.Yellow) 2.dp else 0.dp, color = Color.Black, shape = RoundedCornerShape(5.dp))
-                        .clickable { clickedColor(SelectedColor.Yellow); openOrCloseColorPickBottomSheet() }
+                        .border(width = if(state.selectedColor is SelectedColor.Yellow) 2.dp else 0.dp, color = Color.Black, shape = RoundedCornerShape(5.dp))
+                        .clickable { onColorClicked(SelectedColor.Yellow)}
                     ) {}
                     Box(modifier = Modifier
                         .weight(1f)
@@ -155,8 +153,8 @@ fun AddTagDialog(
                         .fillMaxSize()
                         .padding(5.dp)
                         .background(Color(0xff4caf50), shape = RoundedCornerShape(5.dp))
-                        .border(width = if(uiState.selectedColor is SelectedColor.Green) 2.dp else 0.dp, color = Color.Black, shape = RoundedCornerShape(5.dp))
-                        .clickable { clickedColor(SelectedColor.Green); openOrCloseColorPickBottomSheet() }
+                        .border(width = if(state.selectedColor is SelectedColor.Green) 2.dp else 0.dp, color = Color.Black, shape = RoundedCornerShape(5.dp))
+                        .clickable { onColorClicked(SelectedColor.Green)}
                     ) {}
                 }
                 Row {
@@ -166,8 +164,8 @@ fun AddTagDialog(
                         .fillMaxSize()
                         .padding(5.dp)
                         .background(Color(0xff2196f3), shape = RoundedCornerShape(5.dp))
-                        .border(width = if(uiState.selectedColor is SelectedColor.Blue) 2.dp else 0.dp, color = Color.Black, shape = RoundedCornerShape(5.dp))
-                        .clickable { clickedColor(SelectedColor.Blue); openOrCloseColorPickBottomSheet() }
+                        .border(width = if(state.selectedColor is SelectedColor.Blue) 2.dp else 0.dp, color = Color.Black, shape = RoundedCornerShape(5.dp))
+                        .clickable { onColorClicked(SelectedColor.Blue)}
                     ) {}
                     Box(modifier = Modifier
                         .weight(1f)
@@ -175,8 +173,8 @@ fun AddTagDialog(
                         .fillMaxSize()
                         .padding(5.dp)
                         .background(Color(0xff9c27b0), shape = RoundedCornerShape(5.dp))
-                        .border(width = if(uiState.selectedColor is SelectedColor.Purple) 2.dp else 0.dp, color = Color.Black, shape = RoundedCornerShape(5.dp))
-                        .clickable { clickedColor(SelectedColor.Purple); openOrCloseColorPickBottomSheet() }
+                        .border(width = if(state.selectedColor is SelectedColor.Purple) 2.dp else 0.dp, color = Color.Black, shape = RoundedCornerShape(5.dp))
+                        .clickable { onColorClicked(SelectedColor.Purple)}
                     ) {}
                     Box(modifier = Modifier
                         .weight(1f)
@@ -184,8 +182,8 @@ fun AddTagDialog(
                         .fillMaxSize()
                         .padding(5.dp)
                         .background(Color(0xffe91e63), shape = RoundedCornerShape(5.dp))
-                        .border(width = if(uiState.selectedColor is SelectedColor.Pink) 2.dp else 0.dp, color = Color.Black, shape = RoundedCornerShape(5.dp))
-                        .clickable { clickedColor(SelectedColor.Pink); openOrCloseColorPickBottomSheet() }
+                        .border(width = if(state.selectedColor is SelectedColor.Pink) 2.dp else 0.dp, color = Color.Black, shape = RoundedCornerShape(5.dp))
+                        .clickable { onColorClicked(SelectedColor.Pink)}
                     ) {}
                     Box(modifier = Modifier
                         .weight(1f)
@@ -193,8 +191,8 @@ fun AddTagDialog(
                         .fillMaxSize()
                         .padding(5.dp)
                         .background(Color(red = redSliderValue.toInt(), green = greenSliderValue.toInt(), blue = blueSliderValue.toInt()), shape = RoundedCornerShape(5.dp))
-                        .border(width = if(uiState.selectedColor is SelectedColor.Custom) 2.dp else 0.dp, color = Color.Black, shape = RoundedCornerShape(5.dp))
-                        .clickable { clickedColor(SelectedColor.Custom(Color(redSliderValue.toInt(), greenSliderValue.toInt(), blueSliderValue.toInt()))); openOrCloseColorPickBottomSheet() }
+                        .border(width = if(state.selectedColor is SelectedColor.Custom) 2.dp else 0.dp, color = Color.Black, shape = RoundedCornerShape(5.dp))
+                        .clickable { onColorClicked(SelectedColor.Custom(Color(redSliderValue.toInt(), greenSliderValue.toInt(), blueSliderValue.toInt())))}
                     ) {}
                 }
                 Text(modifier = Modifier.padding(7.5.dp), text = "カスタムカラー", textAlign = TextAlign.Center)

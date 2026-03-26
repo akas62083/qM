@@ -9,40 +9,52 @@ import com.akas62083.qm.db.tagandpoint.TagWithPointsWithTags
 import com.google.android.gms.maps.model.LatLng
 
 data class HomeUiState (
-    val pointWithTags: List<PointWithTags> = emptyList(), // a list of a point and its tags. get first.
-    val tagWithPoints: List<TagWithPoints> = emptyList(), // a list of a tag and its points. get first.
-    val dropDownMenuLocationDisplay: Boolean = true, // what a drawer displays. true is point, false is tag.
-    val isAddTagDialogOpened: Boolean = false, // dialog of add tag is opened or closed. false is closed.
-    val isColorPickBottomSheetOpened: Boolean = false, // bottom sheet of pick color is opened or closed, false is closed.
-    val selectedColor: SelectedColor = SelectedColor.Red, // selected color in add tag dialog.
-    val textFieldValueInAddTagDialog: String = "", // text field value in add tag dialog.
-    val selectedLatLng: LatLng? = null, // latlng that user clicked in map.
-    val selectedTags: List<MapTagEntity> = emptyList(), // selected tags in bottom sheet of making a point.
-    val notSelectedTags: List<MapTagEntity> = emptyList(), // not selected tags in bottom sheet of making a point. it same tagWithPoints at first (when user clicked map).
-    val pointName: String = "", // a name of a point in bottom sheet. it can be also used for edit point name.
-    val markerType: MapMarker = MapMarker.None, // marker type in map. when user click the drawer. it is a response for it.
-    val editPointName: MapPointEntity? = null,
-    val deletePoint: MapPointEntity? = null,
+    val pointWithTags: List<PointWithTags> = emptyList(),
+    val tagWithPoints: List<TagWithPoints> = emptyList(),
+    val markerType: MapMarker = MapMarker.None,
+    val addOrEditEntity: AddOrEditEntity = AddOrEditEntity.None,
+    val dropDownMenuLocationDisplay: Boolean = true,
     val firstLatLng: LatLng? = null,
     val firstZoom: Double? = null,
-    val editPointsTags: MapPointEntity? = null,
-) {
-    val addTagDialogEnabled: Boolean =  textFieldValueInAddTagDialog != "" && !tagWithPoints.any { it.tag.name == textFieldValueInAddTagDialog } // can or cannot save a tag in dialog of add tag.
-    val pointNameEnabled: Boolean = pointName != "" && pointName.length < 21
-}
-sealed class SelectedColor {
-    data object Red: SelectedColor()
-    data object Orange: SelectedColor()
-    data object Yellow: SelectedColor()
-    data object Green: SelectedColor()
-    data object Blue: SelectedColor()
-    data object Purple: SelectedColor()
-    data object Pink: SelectedColor()
-    data class Custom(val color: Color): SelectedColor()
+)
+
+sealed class SelectedColor(val color: Color) {
+    data object Red: SelectedColor(Color(0xffff5252))
+    data object Orange: SelectedColor(Color(0xffff9800))
+    data object Yellow: SelectedColor(Color(0xfffdd835))
+    data object Green: SelectedColor(Color(0xff4caf50))
+    data object Blue: SelectedColor(Color(0xff2196f3))
+    data object Purple: SelectedColor(Color(0xff9c27b0))
+    data object Pink: SelectedColor(Color(0xffe91e63))
+    data class Custom(val customColor: Color): SelectedColor(customColor)
 }
 
 sealed class MapMarker {
     data object None: MapMarker()
     data class MarkerTagWithPointsWithTags(val tagWithPointsWithTags: TagWithPointsWithTags): MapMarker()
     data class MarkerPointWithTags(val pointWithTags: PointWithTags): MapMarker()
+}
+
+sealed interface AddOrEditEntity {
+    data object None: AddOrEditEntity
+    data class AddTag(val text: String, val selectedColor: SelectedColor, val colorPicker: Boolean = false): AddOrEditEntity {
+        val enabled: Boolean = text.isNotBlank() && text.length <= 10
+    }
+    data class AddPoint(
+        val text: String,
+        val latLng: LatLng,
+        val unSelectedTags: List<MapTagEntity>,
+        val selectedTags: List<MapTagEntity> = emptyList()
+    ): AddOrEditEntity {
+        val enabled: Boolean = text.isNotBlank() && text.length <= 20
+    }
+    data class EditTagName(val tag: MapTagEntity, val text: String): AddOrEditEntity {
+        val enabled: Boolean = text.isNotBlank() && text.length <= 10
+    }
+    data class EditPointName(val point: MapPointEntity, val text: String): AddOrEditEntity {
+        val enabled: Boolean = text.isNotBlank() && text.length <= 20
+    }
+    data class EditPointSTags(val point: MapPointEntity): AddOrEditEntity
+    data class DeletePoint(val point: MapPointEntity): AddOrEditEntity
+    data class DeleteTag(val tag: MapTagEntity): AddOrEditEntity
 }

@@ -1,4 +1,4 @@
-package com.akas62083.qm.screens.home.dialogs_bottomsheets
+package com.akas62083.qm.screens.home.conponent.dialogs_bottomsheets
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.shape.CutCornerShape
@@ -7,35 +7,29 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.akas62083.qm.screens.home.AddOrEditEntity
 import com.akas62083.qm.screens.home.HomeUiState
 
 @Composable
-fun EditPointNameDialog(
+fun EditTagNameDialog(
     uiState: HomeUiState,
+    onValueChange: (String) -> Unit,
     cancel: () -> Unit,
-    edit: () -> Unit,
-    changePointName: (String) -> Unit
+    confirm: () -> Unit,
 ) {
+    val state = uiState.addOrEditEntity as AddOrEditEntity.EditTagName
     AlertDialog(
         shape = CutCornerShape(5.dp),
-        onDismissRequest = {
-        },
+        onDismissRequest = {},
         title = {
             Column {
                 Text("名前を変更する")
                 TextField(
-                    value = uiState.pointName,
-                    onValueChange = { changePointName(it) },
+                    value = state.text,
+                    onValueChange = { onValueChange(it) },
                     label = { Text("名前") }
                 )
-                if(!uiState.pointNameEnabled && uiState.pointName.length > 20) {
-                    Text(
-                        text = "名前は20文字以内で入力してください",
-                        color = Color.Red,
-                    )
-                }
             }
         },
         dismissButton = {
@@ -49,10 +43,8 @@ fun EditPointNameDialog(
         },
         confirmButton = {
             Button(
-                enabled = uiState.pointNameEnabled,
                 onClick = {
-                    edit()
-                    cancel()
+                    confirm()
                 }
             ) {
                 Text("変更")

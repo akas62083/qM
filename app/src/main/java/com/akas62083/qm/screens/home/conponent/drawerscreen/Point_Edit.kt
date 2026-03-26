@@ -37,9 +37,9 @@ import com.akas62083.qm.screens.home.HomeUiState
 @Composable
 fun Point_Edit(
     uiState: HomeUiState,
-    openOrCloseEditPointNameDialog: (MapPointEntity?) -> Unit,
-    deleteDialog: (MapPointEntity?) -> Unit,
-    openOrCloseBottomSheetOfEditPointsTags: (MapPointEntity?) -> Unit
+    editPointNameDialogToggle: (MapPointEntity?) -> Unit,
+    deletePointDialogToggle: (MapPointEntity?) -> Unit,
+    editPointSTagsBottomSheetToggle: (MapPointEntity?) -> Unit
 ) {
     Column {
         if (uiState.pointWithTags.isNotEmpty()) {
@@ -55,10 +55,6 @@ fun Point_Edit(
                                 text = it.point.name,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.clickable(
-                                    interactionSource = null,
-                                    indication = null
-                                ) {  }
                             )
                         }
                         Spacer(modifier = Modifier.weight(1f))
@@ -68,7 +64,7 @@ fun Point_Edit(
                             modifier = Modifier.aspectRatio(1f)
                                 .fillMaxHeight()
                                 .padding(10.dp)
-                                .clickable { openOrCloseEditPointNameDialog(it.point) }
+                                .clickable { editPointNameDialogToggle(it.point) }
                         )
                         Spacer(modifier = Modifier.width(10.dp))
                         Icon(
@@ -77,7 +73,7 @@ fun Point_Edit(
                             modifier = Modifier.aspectRatio(1f)
                                 .fillMaxHeight()
                                 .padding(10.dp)
-                                .clickable { deleteDialog(it.point) }
+                                .clickable { deletePointDialogToggle(it.point) }
                         )
                     }
                     Row(modifier = Modifier.horizontalScroll(rememberScrollState())) {
@@ -91,7 +87,7 @@ fun Point_Edit(
                                 .clickable(
                                     interactionSource = null,
                                     indication = null
-                                ) { openOrCloseBottomSheetOfEditPointsTags(it.point) }
+                                ) { editPointSTagsBottomSheetToggle(it.point) }
                         )
                         it.tags.forEach { tag ->
                             Spacer(modifier = Modifier.width(10.dp))

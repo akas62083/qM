@@ -1,4 +1,4 @@
-package com.akas62083.qm.screens.home.conponent
+package com.akas62083.qm.screens.home.conponent.dialogs_bottomsheets
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SharedTransitionLayout
@@ -32,24 +32,23 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.akas62083.qm.db.maptag.MapTagEntity
-import com.akas62083.qm.screens.home.HomeEvent
+import com.akas62083.qm.screens.home.AddOrEditEntity
 import com.akas62083.qm.screens.home.HomeUiState
-import com.google.android.gms.maps.model.LatLng
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BottomSheetScreen(
+fun AddPointBottomSheet(
     uiState: HomeUiState,
-    clickedMap: (LatLng?) -> Unit,
-    changeMapPointName: (String) -> Unit,
-    clickedTagToUnSelected: (MapTagEntity) -> Unit,
-    clickedTag: (MapTagEntity) -> Unit,
-    savePoint: () -> Unit
+    onValueChange: (String) -> Unit,
+    onSelectedTagClicked: (MapTagEntity) -> Unit,
+    onUnSelectedTagClicked: (MapTagEntity) -> Unit,
+    cancel: () -> Unit,
+    confirm: () -> Unit
 ) {
+    val state = uiState.addOrEditEntity as AddOrEditEntity.AddPoint
     ModalBottomSheet(
-        onDismissRequest = { clickedMap(null) },
+        onDismissRequest = { cancel() },
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false),
         modifier = Modifier.fillMaxHeight().fillMaxWidth()
     ) {
@@ -60,7 +59,7 @@ fun BottomSheetScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = uiState.selectedLatLng!!.latitude.toString() + ", " + uiState.selectedLatLng!!.longitude.toString(),
+                        text = state.latLng.latitude.toString() + ", " + state.latLng.longitude.toString(),
                         fontSize = 20.sp,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -68,14 +67,14 @@ fun BottomSheetScreen(
                 }
                 Spacer(modifier = Modifier.height(10.dp))
                 OutlinedTextField(
-                    value = uiState.pointName,
-                    onValueChange = { changeMapPointName(it) },
+                    value = state.text,
+                    onValueChange = { onValueChange(it) },
                     label = { Text("名前") },
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 30.dp)
                 )
                 Spacer(modifier = Modifier.height(10.dp))
                 AnimatedContent(
-                    targetState = uiState.selectedTags,
+                    targetState = state.selectedTags,
                     label = "tag-list"
                 ) { tags ->
                     FlowRow(
@@ -92,7 +91,7 @@ fun BottomSheetScreen(
                                 elevation = CardDefaults.cardElevation(defaultElevation = 5.dp),
                                 modifier = Modifier.padding(10.dp)
                                     .sharedElement(
-                                        rememberSharedContentState(key = "tag-${it.name}"),
+                                        rememberSharedContentState(key = "tag-${it.name}-${it.id}"),
                                         animatedVisibilityScope = this@AnimatedContent,
                                         boundsTransform = { _, _ ->
                                             spring(
@@ -101,7 +100,7 @@ fun BottomSheetScreen(
                                             )
                                         }
                                     )
-                                    .clickable { clickedTagToUnSelected(it) }
+                                    .clickable { onSelectedTagClicked(it) }
                             ) {
                                 Text(
                                     text = it.name,
@@ -117,7 +116,7 @@ fun BottomSheetScreen(
                 }
                 Spacer(modifier = Modifier.height(30.dp))
                 AnimatedContent(
-                    targetState = uiState.notSelectedTags,
+                    targetState = state.unSelectedTags,
                     label = "tag-lists"
                 ) { tags ->
                     FlowRow(
@@ -134,7 +133,7 @@ fun BottomSheetScreen(
                                 elevation = CardDefaults.cardElevation(defaultElevation = 5.dp),
                                 modifier = Modifier.padding(10.dp)
                                     .sharedElement(
-                                        rememberSharedContentState(key = "tag-${it.name}"),
+                                        rememberSharedContentState(key = "tag-${it.name}-${it.id}"),
                                         animatedVisibilityScope = this@AnimatedContent,
                                         boundsTransform = { _, _ ->
                                             spring(
@@ -143,7 +142,7 @@ fun BottomSheetScreen(
                                             )
                                         }
                                     )
-                                    .clickable { clickedTag( it ) }
+                                    .clickable { onUnSelectedTagClicked(it) }
                             ) {
                                 Text(
                                     text = it.name,
@@ -160,7 +159,7 @@ fun BottomSheetScreen(
                 Spacer(modifier = Modifier.height(20.dp))
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                     Button(
-                        onClick = { savePoint() }
+                        onClick = { confirm() }
                     ) {
                         Text("保存")
                     }

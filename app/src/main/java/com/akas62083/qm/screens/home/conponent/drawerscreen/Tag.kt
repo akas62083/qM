@@ -24,8 +24,8 @@ import com.akas62083.qm.screens.home.HomeUiState
 @Composable
 fun Tag(
     uiState: HomeUiState,
-    clickedDownMenuTag: (TagWithPoints) -> Unit,
-    openOrCloseAddTagDialog: () -> Unit
+    onTagClicked: (TagWithPoints) -> Unit,
+    addTagDialogToggle: () -> Unit
 ) {
     Column {
         if (uiState.tagWithPoints.isNotEmpty()) {
@@ -39,7 +39,7 @@ fun Tag(
                             CutCornerShape(5.dp)
                         )
                             .padding(10.dp)
-                            .clickable { clickedDownMenuTag(it) }
+                            .clickable { onTagClicked(it) }
                     )
                     Spacer(modifier = Modifier.width(10.dp))
                     Column(modifier = Modifier.fillMaxHeight()) {
@@ -57,7 +57,7 @@ fun Tag(
             horizontalArrangement = Arrangement.End
         ) {
             Button(
-                onClick = { openOrCloseAddTagDialog() },
+                onClick = { addTagDialogToggle() },
                 shape = CutCornerShape(5.dp)
             ) {
                 Text(text = "タグを追加")

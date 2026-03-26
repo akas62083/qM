@@ -49,27 +49,27 @@ import com.akas62083.qm.screens.home.conponent.drawerscreen.Point
 import com.akas62083.qm.screens.home.conponent.drawerscreen.Point_Edit
 import com.akas62083.qm.screens.home.conponent.drawerscreen.Tag
 import com.akas62083.qm.screens.home.conponent.drawerscreen.Tag_Edit
-import com.akas62083.qm.screens.home.dialogs_bottomsheets.DeletePointDialog
-import com.akas62083.qm.screens.home.dialogs_bottomsheets.EditPointNameDialog
-import com.akas62083.qm.screens.home.dialogs_bottomsheets.EditPointsTagsBottomSheet
 
 @Composable
 fun DrawerScreen(
     uiState: HomeUiState,
-    dropDownMenuDisplayChange: (Boolean) -> Unit,
-    openOrCloseAddTagDialog: () -> Unit,
-    clickedDownMenuPoint: (PointWithTags) -> Unit,
-    clickedDownMenuTag: (TagWithPoints) -> Unit,
-    openOrCloseEditPointNameDialog: (MapPointEntity?) -> Unit,
-    editPointName: () -> Unit,
-    changePointName: (String) -> Unit,
-    deleteDialog: (MapPointEntity?) -> Unit,
-    deletePoint: () -> Unit,
-    openOrCloseBottomSheetOfEditPointsTags: (MapPointEntity?) -> Unit,
-    removeTag: (MapTagEntity) -> Unit,
-    addTag: (MapTagEntity) -> Unit
+    // point not-edit
+    pointMapClicked: (PointWithTags) -> Unit,
+    // tag not-edit
+    tagMapClicked: (TagWithPoints) -> Unit,
+    addTagDialogToggle: () -> Unit,
+    // point edit
+    editPointSTagsBottomSheetToggle: (MapPointEntity?) -> Unit,
+    editPointNameDialogToggle: (MapPointEntity?) -> Unit,
+    deletePointDialogToggle: (MapPointEntity?) -> Unit,
+    // tag edit
+    deleteTagDialogToggle: (MapTagEntity?) -> Unit,
+    editTagNameDialogToggle: (MapTagEntity?) -> Unit,
+    //
+    drawerMenuChanged: (Boolean) -> Unit,
+
 ) {
-    var dropDownMenuExpanded by remember { mutableStateOf(false) } //地点一覧表示かタグ一覧表示かを指定する四角い小さいやつ
+    var dropDownMenuExpanded by remember { mutableStateOf(false) }
     var isEditMode by remember { mutableStateOf(false) }
     val animatedDegree: Float by animateFloatAsState(
         if(dropDownMenuExpanded) 0f else -90f,
@@ -133,7 +133,7 @@ fun DrawerScreen(
                         Text("地点一覧")
                     },
                     onClick = {
-                        dropDownMenuDisplayChange(true)
+                        drawerMenuChanged(true)
                         dropDownMenuExpanded = false
                     },
                     modifier = Modifier.background(if(uiState.dropDownMenuLocationDisplay) Color.LightGray else Color.Transparent)
@@ -143,7 +143,7 @@ fun DrawerScreen(
                         Text("タグ一覧")
                     },
                     onClick = {
-                        dropDownMenuDisplayChange(false)
+                        drawerMenuChanged(false)
                         dropDownMenuExpanded = false
                     },
                     modifier = Modifier.background(if(!uiState.dropDownMenuLocationDisplay) Color.LightGray else Color.Transparent)
@@ -175,16 +175,17 @@ fun DrawerScreen(
                             true -> {
                                 Point_Edit(
                                     uiState = uiState,
-                                    openOrCloseEditPointNameDialog = { openOrCloseEditPointNameDialog(it) },
-                                    deleteDialog = { deleteDialog(it) },
-                                    openOrCloseBottomSheetOfEditPointsTags = { openOrCloseBottomSheetOfEditPointsTags(it) }
+                                    editPointNameDialogToggle = { editPointNameDialogToggle(it) },
+                                    deletePointDialogToggle = { deletePointDialogToggle(it) },
+                                    editPointSTagsBottomSheetToggle = { editPointSTagsBottomSheetToggle(it) }
                                 )
                             }
                             false -> {
                                 Tag_Edit(
                                     uiState = uiState,
-                                    openOrCloseAddTagDialog = { openOrCloseAddTagDialog() },
-                                    clickedDownMenuTag = { clickedDownMenuTag(it) }
+                                    addTagDialogToggle = { addTagDialogToggle() },
+                                    deleteTagDialogToggle = { deleteTagDialogToggle(it) },
+                                    editTagNameDialogToggle = { editTagNameDialogToggle(it) }
                                 )
                             }
                         }
@@ -199,14 +200,14 @@ fun DrawerScreen(
                             true -> {
                                 Point(
                                     uiState = uiState,
-                                    clickedDownMenuPoint = { clickedDownMenuPoint(it) }
+                                    onPointClicked = { pointMapClicked(it) }
                                 )
                             }
                             false -> {
                                 Tag(
                                     uiState = uiState,
-                                    openOrCloseAddTagDialog = { openOrCloseAddTagDialog },
-                                    clickedDownMenuTag = { clickedDownMenuTag(it) }
+                                    addTagDialogToggle = { addTagDialogToggle() },
+                                    onTagClicked = { tagMapClicked(it) }
                                 )
                             }
                         }
@@ -214,29 +215,5 @@ fun DrawerScreen(
                 }
             }
         }
-    }
-
-    if(uiState.editPointName != null) {
-        EditPointNameDialog(
-            uiState = uiState,
-            cancel = { openOrCloseEditPointNameDialog(null) },
-            edit = { editPointName() },
-            changePointName = { changePointName(it) }
-        )
-    }
-    if(uiState.deletePoint != null) {
-        DeletePointDialog(
-            uiState = uiState,
-            cancel = { deleteDialog(null) },
-            delete = { deletePoint() },
-        )
-    }
-    if(uiState.editPointsTags != null) {
-        EditPointsTagsBottomSheet(
-            uiState = uiState,
-            cancel = { openOrCloseBottomSheetOfEditPointsTags(null) },
-            removeTag = { removeTag(it) },
-            addTag = { addTag(it) }
-        )
     }
 }
