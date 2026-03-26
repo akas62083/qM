@@ -1,72 +1,24 @@
 package com.akas62083.qm.screens.home
 
-import android.R.attr.contentDescription
-import android.R.attr.onClick
-import android.R.attr.tag
-import android.R.attr.text
-import android.annotation.SuppressLint
-import android.location.Geocoder
 import android.util.Log
-import android.util.Log.v
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
-import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
-import androidx.compose.animation.core.spring
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.checkScrollableContainerConstraints
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.IntrinsicSize
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CutCornerShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Flag
-import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CardElevation
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DrawerValue
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.FloatingActionButtonElevation
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDrawerState
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -75,46 +27,20 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.akas62083.qm.screens.home.conponent.BottomSheetScreen
 import com.akas62083.qm.screens.home.conponent.DrawerScreen
-import com.akas62083.qm.screens.home.dialogs.AddTagDialog
+import com.akas62083.qm.screens.home.dialogs_bottomsheets.AddTagDialog
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
-import com.google.android.gms.maps.model.CameraPosition.fromLatLngZoom
 import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.LatLngBounds
-import com.google.android.gms.maps.model.Marker
-import com.google.android.gms.maps.model.StreetViewPanoramaLocation
-import com.google.android.gms.maps.model.TileProvider
-import com.google.maps.android.compose.AdvancedMarker
-import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.GoogleMap
-import com.google.maps.android.compose.GroundOverlay
-import com.google.maps.android.compose.GroundOverlayPosition
 import com.google.maps.android.compose.Marker
-import com.google.maps.android.compose.MarkerComposable
-import com.google.maps.android.compose.MarkerState
-import com.google.maps.android.compose.Polygon
-import com.google.maps.android.compose.Polyline
-import com.google.maps.android.compose.TileOverlay
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
-import com.google.maps.android.compose.rememberTileOverlayState
-import com.google.maps.android.compose.streetview.StreetView
-import com.google.maps.android.compose.streetview.rememberStreetViewCameraPositionState
 import com.google.maps.android.ktx.MapsExperimentalFeature
 import kotlinx.coroutines.launch
-import java.util.Locale
 
 @OptIn(
     MapsExperimentalFeature::class,
@@ -133,7 +59,17 @@ fun HomeScreen(
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
     val markerState = rememberMarkerState() // when user click the map
-    val markerStates = remember { mutableListOf<MarkerState>() }
+
+    var positionChanged by remember { mutableStateOf(true) }
+    LaunchedEffect(uiState.firstLatLng) {
+        if(uiState.firstLatLng != null && positionChanged) {
+            cameraPositionState.position = CameraPosition.fromLatLngZoom(
+                uiState.firstLatLng!!,
+                19f
+            )
+            positionChanged = false
+        }
+    }
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -149,6 +85,9 @@ fun HomeScreen(
                     changePointName = { viewModel.onEvent(HomeEvent.ChangeMapPointName(it)) },
                     deleteDialog = { viewModel.onEvent(HomeEvent.DeletePointDialog(it)) },
                     deletePoint = { viewModel.onEvent(HomeEvent.DeletePoint) },
+                    openOrCloseBottomSheetOfEditPointsTags = { viewModel.onEvent(HomeEvent.OpenOrCloseBottomSheetOfEditPointsTags(it)) },
+                    removeTag = { viewModel.onEvent(HomeEvent.RemoveTag(it)) },
+                    addTag = { viewModel.onEvent(HomeEvent.AddTag(it)) },
                     clickedDownMenuPoint = {
                         viewModel.onEvent(HomeEvent.ClickedDrawerMenuPoint(it))
                         scope.launch { drawerState.close() }
@@ -195,6 +134,9 @@ fun HomeScreen(
                             cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(it, 18f))
                         }
                         viewModel.onEvent(HomeEvent.ClickedMap(it))
+                    },
+                    onMapLoaded = {
+                        Log.d("load", "hello")
                     }
                 ) {
                     if(uiState.selectedLatLng != null) {
@@ -228,6 +170,16 @@ fun HomeScreen(
                         }
                     }
                 }
+            }
+        }
+        LaunchedEffect(cameraPositionState.isMoving) {
+            if(!cameraPositionState.isMoving && cameraPositionState.position.target != LatLng(0.0, 0.0)) {
+                viewModel.saveLatLng(
+                    LatLng(
+                        cameraPositionState.position.target.latitude,
+                        cameraPositionState.position.target.longitude
+                    )
+                )
             }
         }
 

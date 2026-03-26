@@ -1,6 +1,5 @@
-package com.akas62083.qm.screens.home.dialogs
+package com.akas62083.qm.screens.home.dialogs_bottomsheets
 
-import android.R.attr.text
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.material3.AlertDialog
@@ -8,13 +7,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.akas62083.qm.db.mappoint.MapPointEntity
 import com.akas62083.qm.screens.home.HomeUiState
 
 @Composable

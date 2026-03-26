@@ -16,6 +16,12 @@ sealed interface HomeEvent {
     data object EditPointName: HomeEvent
     data class DeletePointDialog(val point: MapPointEntity?): HomeEvent
     data object DeletePoint: HomeEvent
+    data class OpenOrCloseBottomSheetOfEditPointsTags(val point: MapPointEntity?): HomeEvent
+    data class RemoveTag(val tag: MapTagEntity): HomeEvent
+    data class AddTag(val tag: MapTagEntity): HomeEvent
+
+    // Map
+
 
     // Map
     data class ClickedMap(val latLng: LatLng?): HomeEvent

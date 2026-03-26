@@ -22,7 +22,10 @@ data class HomeUiState (
     val pointName: String = "", // a name of a point in bottom sheet. it can be also used for edit point name.
     val markerType: MapMarker = MapMarker.None, // marker type in map. when user click the drawer. it is a response for it.
     val editPointName: MapPointEntity? = null,
-    val deletePoint: MapPointEntity? = null
+    val deletePoint: MapPointEntity? = null,
+    val firstLatLng: LatLng? = null,
+    val firstZoom: Double? = null,
+    val editPointsTags: MapPointEntity? = null,
 ) {
     val addTagDialogEnabled: Boolean =  textFieldValueInAddTagDialog != "" && !tagWithPoints.any { it.tag.name == textFieldValueInAddTagDialog } // can or cannot save a tag in dialog of add tag.
     val pointNameEnabled: Boolean = pointName != "" && pointName.length < 21

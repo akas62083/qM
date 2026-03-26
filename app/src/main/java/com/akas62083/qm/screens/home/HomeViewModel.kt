@@ -1,24 +1,25 @@
 package com.akas62083.qm.screens.home
 
-import android.location.Geocoder
+import android.R.attr.tag
+import android.util.Log
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.akas62083.qm.db.mappoint.MapPointEntity
 import com.akas62083.qm.db.maptag.MapTagEntity
 import com.akas62083.qm.db.tagandpoint.PointWithTags
 import com.akas62083.qm.db.tagandpoint.TagPointRef
-import com.akas62083.qm.db.tagandpoint.TagWithPointsWithTags
 import com.akas62083.qm.repository.data_repo.MapDataRepository
 import com.google.android.gms.maps.model.LatLng
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
@@ -26,27 +27,27 @@ class HomeViewModel @Inject constructor(
     private val mapRepository: MapDataRepository
 ): ViewModel() {
     private val _uiState = MutableStateFlow(HomeUiState())
-    val uiState = _uiState.asStateFlow()
+    val uiState: StateFlow<HomeUiState> = combine(
+        _uiState,
+        mapRepository.getAllPointAndTags(),
+        mapRepository.getAllTagAndPoints(),
+        mapRepository.currentMapDataStore
+    ) { currentState, pat, tap, mapData ->
+        currentState.copy(
+            pointWithTags = pat,
+            tagWithPoints = tap,
+            firstLatLng = LatLng(mapData.latitude, mapData.longitude),
+            firstZoom = mapData.zoom
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = HomeUiState()
+    )
 
-    init {
-        load()
-    }
-    private fun load() {
+    fun saveLatLng(latlng: LatLng) {
         viewModelScope.launch {
-            launch {
-                mapRepository.getAllPointAndTags().collect {
-                    _uiState.update { currentState ->
-                        currentState.copy(pointWithTags = it)
-                    }
-                }
-            }
-            launch {
-                mapRepository.getAllTagAndPoints().collect {
-                    _uiState.update { currentState ->
-                        currentState.copy(tagWithPoints = it)
-                    }
-                }
-            }
+            mapRepository.saveLatLng(latlng)
         }
     }
 
@@ -69,6 +70,9 @@ class HomeViewModel @Inject constructor(
             is HomeEvent.EditPointName -> { editPointName() }
             is HomeEvent.DeletePointDialog -> { deletePointDialog(event.point) }
             is HomeEvent.DeletePoint -> { deletePoint() }
+            is HomeEvent.OpenOrCloseBottomSheetOfEditPointsTags -> { openOrCloseBottomSheetOfEditPointsTags(event.point) }
+            is HomeEvent.RemoveTag -> { removeTag(event.tag) }
+            is HomeEvent.AddTag -> { addTag(event.tag)  }
         }
     }
 
@@ -213,6 +217,33 @@ class HomeViewModel @Inject constructor(
     private fun deletePoint() {
         viewModelScope.launch {
             mapRepository.deleteMapPoint(uiState.value.deletePoint!!)
+        }
+    }
+    private fun openOrCloseBottomSheetOfEditPointsTags(point: MapPointEntity?) {
+        _uiState.update { currentState ->
+            currentState.copy(
+                editPointsTags = point
+            )
+        }
+    }
+    private fun removeTag(tag: MapTagEntity) {
+        viewModelScope.launch {
+            mapRepository.deleteTagPointRef(
+                TagPointRef(
+                    tagId = tag.id,
+                    pointId = uiState.value.editPointsTags!!.id
+                )
+            )
+        }
+    }
+    private fun addTag(tag: MapTagEntity) {
+        viewModelScope.launch {
+            mapRepository.insertTagPointRef(
+                TagPointRef(
+                    tagId = tag.id,
+                    pointId = uiState.value.editPointsTags!!.id
+                )
+            )
         }
     }
 }

@@ -1,10 +1,15 @@
 package com.akas62083.qm.di
 
 import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.dataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.preferencesDataStore
 import androidx.room.Room
 import com.akas62083.qm.db.AppDatabase
 import com.akas62083.qm.db.MapDao
 import com.akas62083.qm.repository.data_repo.MapDataRepository
+import com.akas62083.qm.repository.data_repo.impl.MapDataRepositoryImpl
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -27,4 +32,11 @@ object AppModule {
     @Provides
     fun provideDao(database: AppDatabase): MapDao = database.getDao()
 
+    private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
+        name = "setting"
+    )
+
+    @Provides
+    @Singleton
+    fun provideDataStore(@ApplicationContext context: Context): DataStore<Preferences> = context.dataStore
 }
